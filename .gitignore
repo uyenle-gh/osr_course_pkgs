@@ -40,3 +40,6 @@
 doc
 
 .idea
+
+# Virtual environment
+env

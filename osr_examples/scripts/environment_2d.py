@@ -46,6 +46,8 @@ class TriangularObstacle(object):
       self.A[2, :] = b, -a
     self.C[2] = np.dot(self.A[2, :], np.array([x2,y2]))
 
+  def get_vertices(self):
+    return ((self.x0, self.y0), (self.x1, self.y1), (self.x2, self.y2))
 
   def contains(self, x, y):
     r = np.dot(self.A, np.array([x,y])) - self.C
@@ -106,3 +108,75 @@ class Environment(object):
   def plot_query(self, x_start, y_start, x_goal, y_goal):
     pl.plot([x_start], [y_start], "bs", markersize = 8)
     pl.plot([x_goal], [y_goal], "y*", markersize = 12)
+
+  def plot_point(self, x, y):
+    pl.plot([x], [y], "p", markersize = 12, color = "grey")
+
+  def plot_edge(self, point1, point2, color="b"):
+    pl.plot([point1[0], point2[0]], [point1[1], point2[1]], color=color , linewidth = 1)
+
+  def line_intersects_triangle(self, line: tuple, triangle: tuple):
+    """
+    Check if a line segment intersects with a triangle.
+
+    Parameters:
+    line (tuple): The line segment represented by two points ((x0, y0), (x1, y1)).
+    triangle (tuple): The triangle represented by three points ((x0, y0), (x1, y1), (x2, y2)).
+
+    Returns:
+    bool: True if the line segment intersects the triangle, False otherwise.
+    """
+    def on_segment(p, q, r):
+        """
+        Check if point q lies on line segment 'pr'
+        """
+        if (q[0] <= max(p[0], r[0]) and q[0] >= min(p[0], r[0]) and
+                q[1] <= max(p[1], r[1]) and q[1] >= min(p[1], r[1])):
+            return True
+        return False
+
+    def orientation(p, q, r):
+        """
+        Find orientation of ordered triplet (p, q, r).
+        Returns 0 if p, q and r are collinear, 1 if Clockwise, 2 if Counterclockwise
+        """
+        val = ((q[1] - p[1]) * (r[0] - q[0])) - ((q[0] - p[0]) * (r[1] - q[1]))
+        if val == 0:
+            return 0  # Collinear
+        elif val > 0:
+            return 1  # Clockwise
+        else:
+            return 2  # Counterclockwise
+
+    def do_intersect(p1, q1, p2, q2):
+        """
+        Check if line segments 'p1q1' and 'p2q2' intersect.
+        """
+        o1 = orientation(p1, q1, p2)
+        o2 = orientation(p1, q1, q2)
+        o3 = orientation(p2, q2, p1)
+        o4 = orientation(p2, q2, q1)
+
+        # General case
+        if o1 != o2 and o3 != o4:
+            return True
+
+        # Special Cases: Collinearity
+        if o1 == 0 and on_segment(p1, p2, q1): return True
+        if o2 == 0 and on_segment(p1, q2, q1): return True
+        if o3 == 0 and on_segment(p2, p1, q2): return True
+        if o4 == 0 and on_segment(p2, q1, q2): return True
+
+        return False
+
+    # Check for intersection with each side of the triangle
+    return (do_intersect(line[0], line[1], triangle[0], triangle[1]) or
+            do_intersect(line[0], line[1], triangle[1], triangle[2]) or
+            do_intersect(line[0], line[1], triangle[2], triangle[0]))
+
+  def check_edge_collision(self, edge: tuple):
+    for ob in self.obs:
+      triangle = ob.get_vertices()
+      if self.line_intersects_triangle(edge, triangle):
+        return True
+    return False
