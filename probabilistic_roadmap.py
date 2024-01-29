@@ -106,7 +106,7 @@ def add_start_goal_to_roadmap(sample_points: list, roadmap: dict, neighbor_radiu
   return roadmap, start_index, goal_index
 
 
-def dijkstra(roadmap, start_idx, goal_idx):
+def dijkstra(roadmap, start_idx, goal_idx, sample_points):
   """
   Find the shortest path from a start node to a goal node in a graph using Dijkstra's algorithm.
 
@@ -255,7 +255,6 @@ def probabilistic_roadmap(size_x: float, size_y: float,
   # Plot path found
   for i in range(len(path_in_coordinates)-1):
     env.plot_edge(path_in_coordinates[i], path_in_coordinates[i+1], "black")
-  plt.savefig('img/path.png')
   
   return path_in_coordinates
 
@@ -355,14 +354,14 @@ def main():
   # Execute PRM on environment
   path = probabilistic_roadmap(args.size_x, args.size_y, start_point, goal_point, 
                                args.num_samples, args.neighbor_radius, env, path_finder)
-  
+
   if path:
     print("---Path found.")
     print("Step 4 (Optional): Path shortcutting")
-    post_process_path = path_shortcutting(path, args.max_rep, env)
+    path = path_shortcutting(path, args.max_rep, env)
 
   plt.savefig('img/path.png')
-  return post_process_path
+  return path
 
 if __name__ == "__main__":
   main()
