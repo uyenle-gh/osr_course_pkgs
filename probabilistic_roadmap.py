@@ -93,15 +93,15 @@ def add_start_goal_to_roadmap(sample_points: list, roadmap: dict, neighbor_radiu
   goal_index = start_index + 1  # index for the goal point
 
   # Add start and goal points to the roadmap
-  for index, point in enumerate([start_point, goal_point]):
-    current_index = start_index if index == 0 else goal_index
+  for i, point in enumerate([start_point, goal_point]):
+    current_index = start_index if i == 0 else goal_index
     roadmap[current_index] = []
 
-    for i, other_point in enumerate(sample_points):
+    for j, other_point in enumerate(sample_points):
       if compute_euclid_distance(point, other_point) <= neighbor_radius and \
         not env.check_edge_collision((point, other_point)):
-        roadmap[current_index].append(i)  # Connect to other points
-        roadmap[i].append(current_index)
+        roadmap[current_index].append(j)  # Connect to other points
+        roadmap[j].append(current_index)
 
   return roadmap, start_index, goal_index
 
@@ -289,7 +289,6 @@ def path_shortcutting(path: list, maxrep: int, env):
     print("---Shorter path found.")
     for i in range(len(path)-1):
       env.plot_edge(path[i], path[i+1])
-    plt.savefig('img/post-process.png')
   else:
     print("---No potentially shorter paths.")
   return path
@@ -343,27 +342,26 @@ def main():
   plt.clf()
   env.plot()
 
+  # Generate random start and end points
   q = env.random_query()
   if not q:
     print("No query points generated.")
     return
-  
   x_start, y_start, x_goal, y_goal = q
   env.plot_query(x_start, y_start, x_goal, y_goal)
-  plt.savefig('img/setup.png')
-
   start_point = (x_start, y_start)
   goal_point = (x_goal, y_goal)
   
+  # Execute PRM on environment
   path = probabilistic_roadmap(args.size_x, args.size_y, start_point, goal_point, 
                                args.num_samples, args.neighbor_radius, env, path_finder)
   
   if path:
-    print("---Path length: {}".format(len(path)-1))
+    print("---Path found.")
     print("Step 4 (Optional): Path shortcutting")
     post_process_path = path_shortcutting(path, args.max_rep, env)
-    print("Post-processing path length: {}".format(len(post_process_path)-1))
 
+  plt.savefig('img/path.png')
   return post_process_path
 
 if __name__ == "__main__":
