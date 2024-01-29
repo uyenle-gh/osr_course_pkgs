@@ -113,11 +113,11 @@ class Environment(object):
     pl.plot([x], [y], "p", markersize = 12, color = "grey")
 
   def plot_edge(self, point1, point2, color="b"):
-    pl.plot([point1[0], point2[0]], [point1[1], point2[1]], color=color , linewidth = 1)
+    pl.plot([point1[0], point2[0]], [point1[1], point2[1]], color=color , linewidth = 2)
 
   def line_intersects_triangle(self, line: tuple, triangle: tuple):
     """
-    Check if a line segment intersects with a triangle.
+    Check if a line segment intersects with a triangular obstacle.
 
     Parameters:
     line (tuple): The line segment represented by two points ((x0, y0), (x1, y1)).
@@ -128,7 +128,7 @@ class Environment(object):
     """
     def on_segment(p, q, r):
         """
-        Check if point q lies on line segment 'pr'
+        Check if point q lies on line segment connected by p and r.
         """
         if (q[0] <= max(p[0], r[0]) and q[0] >= min(p[0], r[0]) and
                 q[1] <= max(p[1], r[1]) and q[1] >= min(p[1], r[1])):
@@ -138,7 +138,7 @@ class Environment(object):
     def orientation(p, q, r):
         """
         Find orientation of ordered triplet (p, q, r).
-        Returns 0 if p, q and r are collinear, 1 if Clockwise, 2 if Counterclockwise
+        Returns 0 if p, q and r are collinear, 1 if Clockwise, 2 if Counterclockwise.
         """
         val = ((q[1] - p[1]) * (r[0] - q[0])) - ((q[0] - p[0]) * (r[1] - q[1]))
         if val == 0:
@@ -150,7 +150,7 @@ class Environment(object):
 
     def do_intersect(p1, q1, p2, q2):
         """
-        Check if line segments 'p1q1' and 'p2q2' intersect.
+        Check if line segments p1q1 and p2q2 intersect.
         """
         o1 = orientation(p1, q1, p2)
         o2 = orientation(p1, q1, q2)
@@ -175,6 +175,15 @@ class Environment(object):
             do_intersect(line[0], line[1], triangle[2], triangle[0]))
 
   def check_edge_collision(self, edge: tuple):
+    """
+    Check if edge collides with any obstacles in environment.
+
+    Parameters:
+      edge (tuple): The line segment represented by two points ((x0, y0), (x1, y1)).
+    
+    Returns:
+      bool: True if edge collides with any obstacles, False otherwise.
+    """
     for ob in self.obs:
       triangle = ob.get_vertices()
       if self.line_intersects_triangle(edge, triangle):
